@@ -9,16 +9,16 @@ Servo esc;  // create esc object to control a esc
 //motor B connected between B01 and B02
 
 //Motor A
-int PWMA = 9; //Speed control
-int AIN2 = 8; //Direction
-int AIN1 = 7; //Direction
+int PWMA = 34; //Speed control
+int AIN2 = 35; //Direction
+int AIN1 = 32; //Direction
 
-int STBY = 6; //standby
+int STBY = 33; //standby
 
 //Motor B
-int PWMB = 3; //Speed control
-int BIN2 = 4; //Direction
-int BIN1 = 5; //Direction
+int PWMB = 27; //Speed control
+int BIN1 = 25; //Direction
+int BIN2 = 26; //Direction
 
 //defines the speed
 int turn = 100;
@@ -33,13 +33,7 @@ int speed = 200;
 int potpin = 0;  // analog pin used to connect the potentiometer
 int val;    // variable to read the value from the analog pin
 
-int x=1000;
-
-void setup(){
-  Serial.begin (9600);
-
-
-}
+int pwmEsc; //pwm value for esc
 
 void setup() {
   Serial.begin(9600);
@@ -66,20 +60,17 @@ void setup() {
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 
-
 // esc
   esc.attach(9);  // attaches the  on pin 9 to the esc object
   arm();
   Serial.println("Armed!");
 
 }
-void shutDown(){
-    esc.writeMicroseconds(1000);
-    digitalWrite(STBY, LOW);
-}
+int oldRpm;
+int rpm;
 
 void loop() {
-
+  //Read distance
    long duration, distance;
    digitalWrite(trigPin, LOW);
    delayMicroseconds(2);
@@ -92,9 +83,9 @@ void loop() {
    distance = (duration/2) / 29.1;
 
    if(distance >= 20){
-     stepDown();
-     for (int i = 10; i < count; i++) {
-       /* code */
+     stepDown(1500);
+     for (int i = 10; i < 20; i++) {
+       back();
      }
    }
   esc.writeMicroseconds(1100);
@@ -103,23 +94,36 @@ void loop() {
 
 // esc functions
 
-void stepUp(){
-  int x = 1000;
-  for (int i = 0; i < 20; i++) {
-    esc.writeMicroseconds(x);
-    x=x+1;
-    delay(5);
-    return ()
-  }
+void shutDown(){
+    esc.writeMicroseconds(1000);
+    digitalWrite(STBY, LOW);
+    for (size_t i = 0; i < 10; i++) {
+      back();
+    }
+    for (size_t i = 0; i < 20; i++) {
+      turnL();
+    }
+    oldRpm = 1000;
 }
-void stepDown(){
-int x = 1300;
-  for (int i = 0; i < 40; i++) {
-    esc.writeMicroseconds(x);
-    x=x-1;
+
+void stepUp(int rpm, int oldRpm){
+  for (int i = oldRpm; i < rpm; i++) {
+    esc.writeMicroseconds(rpm);
+    rpm=rpm+1;
     delay(5);
   }
+  oldRpm = rpm;
 }
+
+void stepDown(int oldRpm){
+  for (int i = oldRpm; i < rpm; i++) {
+    esc.writeMicroseconds(rpm);
+    rpm = rpm-1;
+    delay(5);
+  }
+  oldRpm = rpm;
+}
+
 void arm(){
 /*  esc.writeMicroseconds(2000);
   Serial.println("2000");
@@ -144,12 +148,12 @@ void halt(){
   digitalWrite(STBY, LOW);
 }
 
-void backFast(){
+void back(){
   move(1, 255, 0); //motor 1,
   move(2, 255, 0); //motor 2,
 }
 
-void forwardSlow(){
+void forward(){
   move(1, speed, 1); //motor 1,
   move(2, speed, 1); //motor 2,
 }
